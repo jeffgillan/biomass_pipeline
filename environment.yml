@@ -1,0 +1,15 @@
+name: biomass_pipeline
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - r-base>=4.3
+  - r-sf
+  - r-terra
+  - r-lidr
+  - r-data.table
+  - r-future
+  - r-rcpp
+  - gdal>=3.1
+  - proj
+  - geos

@@ -1,0 +1,10 @@
+output/
+*.laz
+*.tif
+.git/
+.ipynb_checkpoints/
+renv/library/
+renv/staging/
+docs/
+*.md
+!README.md

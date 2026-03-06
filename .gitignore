@@ -1,0 +1,11 @@
+output/
+*.laz
+*.tif
+peloncillo_east_chm.tif
+renv/library/
+renv/staging/
+.Rproj.user
+.Rhistory
+.RData
+.Rprofile
+.ipynb_checkpoints/
