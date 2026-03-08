@@ -62,7 +62,9 @@ docker run \
 - Download from [Cyverse](https://data.cyverse.org/dav-anon/iplant/home/jgillan/living_carbon_demo/USGS_LPC_NM_SouthCentral_2018_D19_12RXV885860.laz)
 - **Source:** USGS 3DEP (South Central NM, 2018, D19 collection)
 - **CRS:** NAD83(2011) / UTM 12N (EPSG:6341 compound)
-- **Points:** ~10.8 million
+- **Total Points:** ~10.8 million
+- **Point Density:** 5-10 pts/SqMeter
+- **Area:** 226 hectares; 559 acres; 2.2 sqKM; 0.87 sqMiles
 - **Size:** 69 MiB
 - Download other lidar data from [USGS 3DEP](https://apps.nationalmap.gov/lidar-explorer/).
 
