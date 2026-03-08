@@ -1,6 +1,8 @@
-# ALS Biomass Pipeline
+# Aerial LiDAR Biomass Pipeline
 
 Airborne LiDAR (ALS) to aboveground biomass (AGB) estimation pipeline for the Peloncillo Mountains, New Mexico. Processes a USGS 3DEP point cloud through individual tree detection and allometric estimation to produce rasterized biomass maps as Cloud Optimized GeoTIFFs. DBH and biomass are estimated via Jucker et al. (2017) global allometric equations with Monte Carlo uncertainty propagation.
+
+<br>
 
 ## Pipeline Overview
 
@@ -25,6 +27,8 @@ Airborne LiDAR (ALS) to aboveground biomass (AGB) estimation pipeline for the Pe
     v
 biomass_agb_mgha.tif + biomass_uncertainty_mgha.tif (COG)
 ```
+<br>
+<br>
 
 ## Quick Start -- Local (Pathway 1)
 
@@ -49,14 +53,21 @@ docker run \
   -v $(pwd)/output:/pipeline/output \
   biomass-pipeline
 ```
+<br>
+<br>
 
 ## Input Data
 
 - **File:** `USGS_LPC_NM_SouthCentral_2018_D19_12RXV885860.laz`
+- Download from [Cyverse](https://data.cyverse.org/dav-anon/iplant/home/jgillan/living_carbon_demo/USGS_LPC_NM_SouthCentral_2018_D19_12RXV885860.laz)
 - **Source:** USGS 3DEP (South Central NM, 2018, D19 collection)
 - **CRS:** NAD83(2011) / UTM 12N (EPSG:6341 compound)
 - **Points:** ~10.8 million
-- Not committed to git due to size. Download from [USGS 3DEP](https://apps.nationalmap.gov/lidar-explorer/).
+- **Size:** 69 MiB
+- Download other lidar data from [USGS 3DEP](https://apps.nationalmap.gov/lidar-explorer/).
+
+<br>
+<br>
 
 ## Outputs
 
@@ -64,9 +75,12 @@ docker run \
 |------|-------------|-------|
 | `output/final/biomass_agb_mgha.tif` | Aboveground biomass density | Mg/ha (megagrams per hectare) |
 | `output/final/biomass_uncertainty_mgha.tif` | AGB uncertainty (1 SD from MC) | Mg/ha |
-| `output/intermediate/tree_biomass.rds` | Per-tree estimates with MC statistics | kg per tree |
+| `output/intermediate/tree_crowns.geojson` | Polygon of every detected tree | kg per tree |
 
 Both final TIFs are Cloud Optimized GeoTIFFs (Float32, DEFLATE compression, -9999 NoData).
+
+<br>
+<br>
 
 ## Error Estimation
 
