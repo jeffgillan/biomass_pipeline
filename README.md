@@ -4,12 +4,14 @@ Airborne LiDAR (ALS) to aboveground biomass (AGB) estimation pipeline for the Pe
 
 
 <br>
+<br>
 
 ## Pipeline Overview
 
 <img width="1090" height="597" alt="biomass_pipeline_graphic" src="https://github.com/user-attachments/assets/6931e557-c2a4-4f21-8a8f-e945d3c69626" />
 
-
+<br>
+<br>
 
 ```
 .laz point cloud
