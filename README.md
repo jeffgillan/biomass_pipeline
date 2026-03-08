@@ -109,21 +109,38 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 ## Error Estimation
 
-Two independent uncertainty methods:
+Uncertainty methods:
 
 1. **Jucker Monte Carlo (500 iterations):** Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
-2. **BIOMASS::AGBmonteCarlo():** Independent cross-check using the BIOMASS R package's built-in error propagation with Chave 2004 DBH error model.
+● Units: Mg/ha — megagrams per hectare, which is identical to metric tonnes per hectare. Same units as the main biomass    
+  map, so the two are directly comparable.                                      
+                                                                                                                           
+  ---                                                                                                                      
+  Plain-language explanation you could use with stakeholders:
+                                                                                                                           
+  The main biomass map gives our best single estimate of how much carbon-storing biomass is in each area. The uncertainty 
+  map shows the margin of error on that estimate — in the same units (tonnes per hectare).
 
-Pixel-level uncertainty: sum-of-variances across trees within each 20m pixel, converted to SD in Mg/ha.
+  For any given pixel, you can read the two maps together like this: if the biomass map shows 50 t/ha and the uncertainty
+  map shows 12 t/ha, the true value most likely falls somewhere between 38 and 62 t/ha.
 
+  Higher uncertainty values (brighter areas on the map) indicate places where our estimate is less reliable. This tends to
+  happen where trees are densely packed into a single pixel, where tree crowns were difficult to delineate cleanly, or
+  where trees are very small. Lower uncertainty values mean we have more confidence in that estimate.
 
----                                                                                                              
-  Path 1: itcSegment (point estimate only)                                                                         
-                                                                                                                   
-  - itcSegment::dbh(H, CA, biome=14) → itcSegment::agb(D, species=1)                                               
-  - Produces a single AGB_kg value per tree — no error bounds                                                      
-  - Serves as a comparison baseline                                                                                
+  The uncertainty accounts for several real-world limitations stacked together: the LiDAR instrument's height measurement
+  accuracy, imprecision in automatically delineating individual tree crowns, natural variability in how dense the wood is
+  for these tree species, and the fact that the allometric equations used to convert tree size to biomass were developed
+  from a global dataset and aren't perfectly calibrated for this specific forest.
+
+  ---
+  One thing worth flagging to stakeholders: the uncertainty map represents one standard deviation (roughly a ±1 sigma
+  band), meaning the true value falls within that range about 68% of the time — not a guaranteed bound. If you want to
+  communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). Worth deciding which
+  framing fits your stakeholder context before publishing.
+
+                                                                            
                                                                                                                    
   Path 2: Jucker 2017 Monte Carlo (primary uncertainty)
 
@@ -146,13 +163,6 @@ Pixel-level uncertainty: sum-of-variances across trees within each 20m pixel, co
   Each iteration: perturbed H,CD → Jucker ln(DBH) equation → Chave 2014 AGB formula → one AGB sample. From 500
   samples: mean, SD, 5th/95th percentiles, CV per tree.
 
-  Path 3: BIOMASS::AGBmonteCarlo (cross-check)
-
-  - Uses itcSegment DBH as input (not Jucker DBH)
-  - Propagates height error (1m), wood density error (0.08), and DBH error (Chave 2004 model)
-  - 500 iterations → mean + SD per tree
-  - Not used in final rasters — purely for validation against Path 2
-
   Raster-level propagation (Step 05)
 
   - Only Path 2 (Jucker MC) feeds the uncertainty raster
@@ -164,7 +174,51 @@ Pixel-level uncertainty: sum-of-variances across trees within each 20m pixel, co
   Key assumption: tree-level errors are independent. Systematic biases (CHM method, allometric model choice, biome
   code) aren't captured.
 
+The current approach has a fundamental limitation: all the error distributions are borrowed from         
+  literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're
+  plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace         
+  assumptions with measurements.                                                                                           
+   
+  Here's a progression from simple to more rigorous:                                                                       
+                                                        
+  ---
+  Level 1: Validate the ALS height estimates
 
+  Compare LiDAR-derived tree heights (Z) to field-measured heights for the same trees. This gives you an empirical RMSE and
+   bias specific to your sensor and canopy conditions — replacing the assumed 1.0m SD in the MC loop with a real number. It
+   may also reveal systematic bias (LiDAR commonly underestimates height in dense canopies), which the current model
+  ignores entirely.
+
+  ---
+  Level 2: Validate crown diameter delineation
+
+  Measure crown diameters in the field (four cardinal directions, averaged) and compare to the LiDAR-derived values. This
+  replaces the assumed 15% CV with an actual CV, and may reveal that the error is not symmetric or lognormal as assumed.
+
+  ---
+  Level 3: Validate the allometric equations locally
+
+  The Jucker RSE of 0.40 is a global value fit across many forest types. For your New Mexico woodland (piñon-juniper /
+  ponderosa), the actual prediction error could be higher or lower. With field-measured DBH and AGB (destructive harvest or
+   species-specific allometrics from the literature), you can:
+  - Compute the actual residuals between predicted and measured AGB
+  - Fit a local RSE to replace the global one
+  - Check for systematic bias by tree size class (allometrics often perform worse at the extremes)
+
+  ---
+  Level 4: Empirical pixel-level validation
+
+  Establish field plots whose footprints align with your 10m raster pixels. Sum the measured biomass of all trees in each
+  plot and compare directly to the raster pixel value. This is the gold standard — it collapses all sources of error
+  (height, crown, allometric, segmentation) into a single observed prediction error at the output scale. You can then
+  report RMSE and bias at the map level, not just the tree level.
+
+  ---
+  Level 5: Fit a local allometric model (if sample size allows)
+
+  With enough ground-measured DBH + AGB pairs (typically 30–50+ trees), you could fit your own regional allometric
+  equation, replacing Jucker and Chave entirely with coefficients calibrated to your forest type. This is the most rigorous
+   option and would dramatically reduce model uncertainty for the specific species present.
 
 ## License
 
