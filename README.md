@@ -84,6 +84,10 @@ Both final TIFs are Cloud Optimized GeoTIFFs (Float32, DEFLATE compression, -999
 <br>
 <br>
 
+## Above Ground Biomass Calculation
+
+This pipeline uses the [Jucker et al. 2017](https://onlinelibrary.wiley.com/doi/10.1111/gcb.13388) allometric model which is a log-linear regression: it predicts the natural log of DBH from the natural log of height and crown diameter. Like any regression, the model was fitted to a dataset — in this case, about 108,000 trees from around the world — and the predictions carry residual error from that fit.
+
 ## Error Estimation
 
 Two independent uncertainty methods:
