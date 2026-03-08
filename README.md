@@ -120,6 +120,13 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 **Jucker Monte Carlo (500 iterations):** Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
+| Error source | How perturbed | Magnitude |
+|---|---|---|
+| Allometric coefficients (a, b, c) | N(coeff, SE) | SE = 0.05, 0.03, 0.02 |
+| ALS height measurement | H + N(0, 1.0) | 1.0 m RMSE |
+| Crown diameter delineation | Lognormal, CV=15% | multiplicative |
+| Allometric residual | + N(0, 0.40) on ln(DBH) scale | RSE = 0.40 |
+| Wood density | N(0.50, 0.08), floor 0.2 | species variation |
                                                                                                                        
 The main biomass map gives our best single estimate of how much carbon-storing biomass is in each area. The uncertainty map shows the margin of error on that estimate — in the same units (tonnes per hectare).
 
@@ -134,36 +141,7 @@ The uncertainty accounts for several real-world limitations stacked together: th
   band), meaning the true value falls within that range about 68% of the time — not a guaranteed bound. If you want to
   communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
 
-                                                                            
-                                                                                                                   
-  Path 2: Jucker 2017 Monte Carlo (primary uncertainty)
-
-  500 MC iterations per tree, propagating 5 independent error sources each iteration:
-
-  ┌───────────────────────────────────┬───────────────────────────────┬───────────────────────┐
-  │           Error source            │         How perturbed         │       Magnitude       │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Allometric coefficients (a, b, c) │ N(coeff, SE)                  │ SE = 0.05, 0.03, 0.02 │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ ALS height measurement            │ H + N(0, 1.0)                 │ 1.0 m RMSE            │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Crown diameter delineation        │ Lognormal, CV=15%             │ multiplicative        │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Allometric residual               │ + N(0, 0.40) on ln(DBH) scale │ RSE = 0.40            │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Wood density                      │ N(0.50, 0.08), floor 0.2      │ species variation     │
-  └───────────────────────────────────┴───────────────────────────────┴───────────────────────┘
-
-  Each iteration: perturbed H,CD → Jucker ln(DBH) equation → Chave 2014 AGB formula → one AGB sample. From 500
-  samples: mean, SD, 5th/95th percentiles, CV per tree.
-
-  Raster-level propagation (Step 05)
-
-  - Only Path 2 (Jucker MC) feeds the uncertainty raster
-  - Per-tree variance: AGB_mc_var = AGB_mc_sd²
-  - Per-pixel: sum of variances across all trees in pixel (assumes independence)
-  - Pixel SD: √(sum_var), then converted to Mg/ha
-  - Output: biomass_uncertainty_mgha.tif = 1 SD band
+                                                                                                                                                                        
 
 <br>
 <br>
