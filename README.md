@@ -118,7 +118,7 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 ## Uncertainty Estimation
 
-**Jucker Monte Carlo (500 iterations):** Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
+**Jucker Monte Carlo (500 iterations):** We run 500 iterations of the AGB model equation for every tree, with slight variations for 5 variables. Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
 | Error source | How perturbed | Magnitude |
 |---|---|---|
@@ -127,31 +127,18 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 | Crown diameter delineation | Lognormal, CV=15% | multiplicative |
 | Allometric residual | + N(0, 0.40) on ln(DBH) scale | RSE = 0.40 |
 | Wood density | N(0.50, 0.08), floor 0.2 | species variation |
-                                                                                                                       
-The main biomass map gives our best single estimate of how much carbon-storing biomass is in each area. The uncertainty map shows the margin of error on that estimate — in the same units (tonnes per hectare).
+
+The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
 
 For any given pixel, you can read the two maps together like this: if the biomass map shows 50 t/ha and the uncertainty map shows 12 t/ha, the true value most likely falls somewhere between 38 and 62 t/ha.
 
-Higher uncertainty values (brighter areas on the map) indicate places where our estimate is less reliable. This tends to happen where trees are densely packed into a single pixel, where tree crowns were difficult to delineate cleanly, or where trees are very small. Lower uncertainty values mean we have more confidence in that estimate.
-
-The uncertainty accounts for several real-world limitations stacked together: the LiDAR instrument's height measurement accuracy, imprecision in automatically delineating individual tree crowns, natural variability in how dense the wood is for these tree species, and the fact that the allometric equations used to convert tree size to biomass were developed from a global dataset and aren't perfectly calibrated for this specific forest.
-
-  ---
-  The uncertainty map represents one standard deviation (roughly a ±1 sigma
-  band), meaning the true value falls within that range about 68% of the time — not a guaranteed bound. If you want to
-  communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
-
-                                                                                                                                                                        
-
+                                                                                                                                                                
 <br>
 <br>
 
 ## Limitations
 
-The current approach has a fundamental limitation: all the error distributions are borrowed from         
-  literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're
-  plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace         
-  assumptions with measurements.                                                                                           
+The current approach has a fundamental limitation: all the error distributions are borrowed from literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace assumptions with measurements.                                                                                           
    
   Here's a progression from simple to more rigorous:                                                                       
                                                         
