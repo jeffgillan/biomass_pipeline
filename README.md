@@ -2,9 +2,14 @@
 
 Airborne LiDAR (ALS) to aboveground biomass (AGB) estimation pipeline for the Peloncillo Mountains, New Mexico. Processes a USGS 3DEP point cloud through individual tree detection and allometric estimation to produce rasterized biomass maps as Cloud Optimized GeoTIFFs. DBH and biomass are estimated via Jucker et al. (2017) global allometric equations with Monte Carlo uncertainty propagation.
 
+
 <br>
 
 ## Pipeline Overview
+
+<img width="1090" height="597" alt="biomass_pipeline_graphic" src="https://github.com/user-attachments/assets/6931e557-c2a4-4f21-8a8f-e945d3c69626" />
+
+
 
 ```
 .laz point cloud
