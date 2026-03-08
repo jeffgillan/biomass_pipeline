@@ -86,7 +86,26 @@ Both final TIFs are Cloud Optimized GeoTIFFs (Float32, DEFLATE compression, -999
 
 ## Above Ground Biomass Calculation
 
-This pipeline uses the [Jucker et al. 2017](https://onlinelibrary.wiley.com/doi/10.1111/gcb.13388) allometric model which is a log-linear regression: it predicts the natural log of DBH from the natural log of height and crown diameter. Like any regression, the model was fitted to a dataset — in this case, about 108,000 trees from around the world — and the predictions carry residual error from that fit.
+This pipeline uses the [Jucker et al. 2017](https://onlinelibrary.wiley.com/doi/10.1111/gcb.13388) allometric model which is a log-linear regression: it predicts the natural log of AGB from the natural log of **height** and **crown diameter**. Like any regression, the model was fitted to a dataset — in this case, about 108,000 trees from around the world — and the predictions carry residual error from that fit. The user is able to select between angiosperm and gymnosperm tree types. 
+
+The equation is:
+**AGB = exp(a + b × ln(H) + c × ln(CD))**
+
+where:
+
+**H** is tree height in meters. This is your measured value coming from the LiDAR-derived CHM — the Z value from crown_metrics().
+CD is crown diameter in meters. This is derived from your segmented crown polygons — you compute it as 2 × sqrt(convhull_area / pi), converting the convex hull area into the diameter of an equivalent circle.
+
+**ln()** is the natural logarithm. Taking the log of height and crown diameter transforms the relationship into a linear one. In real space, the relationship between tree dimensions and biomass is curved and multiplicative — a tree twice as tall doesn't have twice the biomass, it has something like four to eight times as much. Log transformation linearizes that power-law behavior so that ordinary linear regression can be used to fit the model.
+
+**a** is the intercept coefficient. It sets the baseline scale of the prediction. In the linear equation a + b×ln(H) + c×ln(CD), this is the predicted value of ln(AGB) when both ln(H) and ln(CD) equal zero — which would correspond to a tree of 1 meter height and 1 meter crown diameter (since ln(1) = 0). It's a scaling constant that anchors the equation to real-world biomass magnitudes. Different species groups have different intercepts because a gymnosperm and an angiosperm of the same dimensions have fundamentally different wood density and branching architecture, leading to different mass.
+
+**b** is the height exponent. It controls how strongly biomass responds to changes in tree height. A value of, say, 1.5 means that a 1% increase in height corresponds to roughly a 1.5% increase in biomass, all else being equal. This makes physical sense — taller trees have longer trunks with more wood volume.
+
+**c** is the crown diameter exponent. It controls how strongly biomass responds to changes in crown spread. A larger crown generally indicates a thicker trunk and more branch mass. This coefficient tends to be larger than b, reflecting the fact that crown diameter is a stronger predictor of total tree mass than height alone. This also makes intuitive sense — two trees of the same height can have very different biomass if one has a narrow crown and the other has a wide spreading canopy.
+
+**exp()** is the exponential function — it back-transforms the prediction from log space to real space. The entire regression was fitted in log space (predicting ln(AGB) from ln(H) and ln(CD)), so the final step exponentiates to get AGB in kilograms.
+
 
 ## Error Estimation
 
