@@ -130,7 +130,7 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
 
-For any given pixel, you can read the two maps together like this: if the biomass map shows 50 t/ha and the uncertainty map shows 12 t/ha, the true value most likely falls somewhere between 38 and 62 t/ha.
+The Monte Carlo simulation is an estimate of model precision, 
 
                                                                                                                                                                 
 <br>
