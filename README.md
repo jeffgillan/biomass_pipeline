@@ -2,9 +2,16 @@
 
 Airborne LiDAR (ALS) to aboveground biomass (AGB) estimation pipeline for the Peloncillo Mountains, New Mexico. Processes a USGS 3DEP point cloud through individual tree detection and allometric estimation to produce rasterized biomass maps as Cloud Optimized GeoTIFFs. DBH and biomass are estimated via Jucker et al. (2017) global allometric equations with Monte Carlo uncertainty propagation.
 
+
+<br>
 <br>
 
 ## Pipeline Overview
+
+<img width="1090" height="597" alt="biomass_pipeline_graphic" src="https://github.com/user-attachments/assets/6931e557-c2a4-4f21-8a8f-e945d3c69626" />
+
+<br>
+<br>
 
 ```
 .laz point cloud
@@ -30,7 +37,7 @@ biomass_agb_mgha.tif + biomass_uncertainty_mgha.tif (COG)
 <br>
 <br>
 
-## Quick Start -- Local (Pathway 1)
+## Quick Start -- Native Installation (pathway 1)
 
 ```bash
 # Create conda environment
@@ -44,7 +51,7 @@ R -e "install.packages(c('itcSegment', 'BIOMASS', 'RCSF'), repos='https://cloud.
 Rscript R/run_pipeline.R
 ```
 
-## Quick Start -- Docker (Pathway 2)
+## Quick Start -- Docker (pathway 2)
 
 ```bash
 docker build -t biomass-pipeline .
@@ -106,65 +113,94 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 **exp()** is the exponential function — it back-transforms the prediction from log space to real space. The entire regression was fitted in log space (predicting ln(AGB) from ln(H) and ln(CD)), so the final step exponentiates to get AGB in kilograms.
 
+<br>
+<br>
 
-## Error Estimation
+## Model Precision
 
-Two independent uncertainty methods:
+**Jucker Monte Carlo (500 iterations):** We run 500 iterations of the AGB model equation for every tree, with slight variations for 5 variables. Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
-1. **Jucker Monte Carlo (500 iterations):** Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
-
-2. **BIOMASS::AGBmonteCarlo():** Independent cross-check using the BIOMASS R package's built-in error propagation with Chave 2004 DBH error model.
-
-Pixel-level uncertainty: sum-of-variances across trees within each 20m pixel, converted to SD in Mg/ha.
-
-
----                                                                                                              
-  Path 1: itcSegment (point estimate only)                                                                         
-                                                                                                                   
-  - itcSegment::dbh(H, CA, biome=14) → itcSegment::agb(D, species=1)                                               
-  - Produces a single AGB_kg value per tree — no error bounds                                                      
-  - Serves as a comparison baseline                                                                                
-                                                                                                                   
-  Path 2: Jucker 2017 Monte Carlo (primary uncertainty)
-
-  500 MC iterations per tree, propagating 5 independent error sources each iteration:
-
-  ┌───────────────────────────────────┬───────────────────────────────┬───────────────────────┐
-  │           Error source            │         How perturbed         │       Magnitude       │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Allometric coefficients (a, b, c) │ N(coeff, SE)                  │ SE = 0.05, 0.03, 0.02 │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ ALS height measurement            │ H + N(0, 1.0)                 │ 1.0 m RMSE            │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Crown diameter delineation        │ Lognormal, CV=15%             │ multiplicative        │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Allometric residual               │ + N(0, 0.40) on ln(DBH) scale │ RSE = 0.40            │
-  ├───────────────────────────────────┼───────────────────────────────┼───────────────────────┤
-  │ Wood density                      │ N(0.50, 0.08), floor 0.2      │ species variation     │
-  └───────────────────────────────────┴───────────────────────────────┴───────────────────────┘
-
-  Each iteration: perturbed H,CD → Jucker ln(DBH) equation → Chave 2014 AGB formula → one AGB sample. From 500
-  samples: mean, SD, 5th/95th percentiles, CV per tree.
-
-  Path 3: BIOMASS::AGBmonteCarlo (cross-check)
-
-  - Uses itcSegment DBH as input (not Jucker DBH)
-  - Propagates height error (1m), wood density error (0.08), and DBH error (Chave 2004 model)
-  - 500 iterations → mean + SD per tree
-  - Not used in final rasters — purely for validation against Path 2
-
-  Raster-level propagation (Step 05)
-
-  - Only Path 2 (Jucker MC) feeds the uncertainty raster
-  - Per-tree variance: AGB_mc_var = AGB_mc_sd²
-  - Per-pixel: sum of variances across all trees in pixel (assumes independence)
-  - Pixel SD: √(sum_var), then converted to Mg/ha
-  - Output: biomass_uncertainty_mgha.tif = 1 SD band
-
-  Key assumption: tree-level errors are independent. Systematic biases (CHM method, allometric model choice, biome
-  code) aren't captured.
+| Error source | How perturbed | Magnitude |
+|---|---|---|
+| Allometric coefficients (a, b, c) | N(coeff, SE) | SE = 0.05, 0.03, 0.02 |
+| ALS height measurement | H + N(0, 1.0) | 1.0 m RMSE |
+| Crown diameter delineation | Lognormal, CV=15% | multiplicative |
+| Allometric residual | + N(0, 0.40) on ln(DBH) scale | RSE = 0.40 |
+| Wood density | N(0.50, 0.08), floor 0.2 | species variation |
 
 
+### biomass_uncertainty_mgha.tif
+The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
+
+### biomass_uncertainty_CV.tif
+
+
+The Monte Carlo simulation is an estimate of model precision, how repeatable the measurement is. **It is not an estimate of accuracy, a comparison between the model and a known truth.**
+
+                                                                                                                                                                
+<br>
+<br>
+
+## Model Accuracy
+
+Assessing model accuracy requires comparing model outputs with ground metrics. We must have several validation plots where we have identified each individual tree location, it's height, crown diameter, dbh, and ultimately above ground biomass. 
+
+
+## Fine-tuning the ABG model to fit Living Carbon Trees and Ecosystem
+
+The AGB model used in this demo is very general and global in nature. It is specific for conifer trees. 
+
+<br>
+<br>
+<br>
+<br>
+
+
+The current approach has a fundamental limitation: all the error distributions are borrowed from literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace assumptions with measurements.                                                                                           
+   
+  Here's a progression from simple to more rigorous:                                                                       
+                                                        
+  ---
+  Level 1: Validate the ALS height estimates
+
+  Compare LiDAR-derived tree heights (Z) to field-measured heights for the same trees. This gives you an empirical RMSE and
+   bias specific to your sensor and canopy conditions — replacing the assumed 1.0m SD in the MC loop with a real number. It
+   may also reveal systematic bias (LiDAR commonly underestimates height in dense canopies), which the current model
+  ignores entirely.
+
+  ---
+  Level 2: Validate crown diameter delineation
+
+  Measure crown diameters in the field (four cardinal directions, averaged) and compare to the LiDAR-derived values. This
+  replaces the assumed 15% CV with an actual CV, and may reveal that the error is not symmetric or lognormal as assumed.
+
+  ---
+  Level 3: Validate the allometric equations locally
+
+  The Jucker RSE of 0.40 is a global value fit across many forest types. For your New Mexico woodland (piñon-juniper /
+  ponderosa), the actual prediction error could be higher or lower. With field-measured DBH and AGB (destructive harvest or
+   species-specific allometrics from the literature), you can:
+  - Compute the actual residuals between predicted and measured AGB
+  - Fit a local RSE to replace the global one
+  - Check for systematic bias by tree size class (allometrics often perform worse at the extremes)
+
+  ---
+  Level 4: Empirical pixel-level validation
+
+  Establish field plots whose footprints align with your 10m raster pixels. Sum the measured biomass of all trees in each
+  plot and compare directly to the raster pixel value. This is the gold standard — it collapses all sources of error
+  (height, crown, allometric, segmentation) into a single observed prediction error at the output scale. You can then
+  report RMSE and bias at the map level, not just the tree level.
+
+  ---
+  Level 5: Fit a local allometric model (if sample size allows)
+
+  With enough ground-measured DBH + AGB pairs (typically 30–50+ trees), you could fit your own regional allometric
+  equation, replacing Jucker and Chave entirely with coefficients calibrated to your forest type. This is the most rigorous
+   option and would dramatically reduce model uncertainty for the specific species present.
+
+<br>
+<br>
 
 ## License
 
