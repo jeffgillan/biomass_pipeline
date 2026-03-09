@@ -12,6 +12,7 @@ cat("=== Step 5: Rasterize Biomass Output ===\n")
 input_rds       <- file.path("output", "intermediate", "tree_biomass.rds")
 output_agb      <- file.path("output", "final", "biomass_agb_mgha.tif")
 output_uncert   <- file.path("output", "final", "biomass_uncertainty_mgha.tif")
+output_cv       <- file.path("output", "final", "biomass_uncertainty_cv_pct.tif")
 
 if (!file.exists(input_rds)) stop("Input not found: ", input_rds)
 
@@ -57,6 +58,12 @@ uncert_mgha <- (sd_kg / 1000) * (10000 / pixel_area_m2)
 cat(sprintf("  Uncertainty range: %.1f - %.1f Mg/ha\n",
             minmax(uncert_mgha)[1], minmax(uncert_mgha)[2]))
 
+# --- Compute CV raster (SD / mean * 100, as percentage) ---
+cat("Computing CV uncertainty raster...\n")
+cv_pct <- (uncert_mgha / agb_mgha) * 100
+cat(sprintf("  CV range: %.1f - %.1f %%\n",
+            minmax(cv_pct)[1], minmax(cv_pct)[2]))
+
 # --- Reproject to EPSG:4326 for web map display ---
 if (Sys.getenv("PROJ_DATA") == "" && dir.exists("/opt/conda/share/proj")) {
   Sys.setenv(PROJ_DATA = "/opt/conda/share/proj")
@@ -64,6 +71,7 @@ if (Sys.getenv("PROJ_DATA") == "" && dir.exists("/opt/conda/share/proj")) {
 cat("Reprojecting rasters to EPSG:4326 (WGS84)...\n")
 agb_mgha    <- terra::project(agb_mgha, "EPSG:4326", method = "bilinear")
 uncert_mgha <- terra::project(uncert_mgha, "EPSG:4326", method = "bilinear")
+cv_pct      <- terra::project(cv_pct, "EPSG:4326", method = "bilinear")
 
 # --- Write as COG ---
 # Check GDAL version for COG support
@@ -94,6 +102,7 @@ write_cog <- function(raster, path) {
 
 write_cog(agb_mgha, output_agb)
 write_cog(uncert_mgha, output_uncert)
+write_cog(cv_pct, output_cv)
 
 # --- Write tree crown polygons as GeoPackage for QGIS ---
 output_gpkg <- file.path("output", "final", "tree_crowns_biomass.gpkg")
@@ -109,6 +118,9 @@ if (length(agb_vals) > 0) {
   cat(sprintf("  AGB median: %.1f Mg/ha\n", median(agb_vals)))
   cat(sprintf("  AGB mean:   %.1f Mg/ha\n", mean(agb_vals)))
   cat(sprintf("  AGB range:  %.1f - %.1f Mg/ha\n", min(agb_vals), max(agb_vals)))
+  cv_vals <- terra::values(cv_pct, na.rm = TRUE)
+  cat(sprintf("  CV median: %.1f %%\n", median(cv_vals)))
+  cat(sprintf("  CV range:  %.1f - %.1f %%\n", min(cv_vals), max(cv_vals)))
 }
 
 cat("Step 5 complete.\n\n")
