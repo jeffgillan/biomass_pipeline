@@ -116,7 +116,7 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 <br>
 <br>
 
-## Uncertainty Estimation
+## Model Precision
 
 **Jucker Monte Carlo (500 iterations):** We run 500 iterations of the AGB model equation for every tree, with slight variations for 5 variables. Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
@@ -130,13 +130,26 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 
 The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
 
-The Monte Carlo simulation is an estimate of model precision, 
+The Monte Carlo simulation is an estimate of model precision, how repeatable the measurement is. **It is not an estimate of accuracy, a comparison between the model and a known truth.**
 
                                                                                                                                                                 
 <br>
 <br>
 
-## Limitations
+## Model Accuracy
+
+Assessing model accuracy requires comparing model outputs with ground metrics. We must have several validation plots where we have identified each individual tree location, it's height, crown diameter, dbh, and ultimately above ground biomass. 
+
+
+## Fine-tuning the ABG model to fit Living Carbon Trees and Ecosystem
+
+The AGB model used in this demo is very general and global in nature. It is specific for conifer trees. 
+
+<br>
+<br>
+<br>
+<br>
+
 
 The current approach has a fundamental limitation: all the error distributions are borrowed from literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace assumptions with measurements.                                                                                           
    
@@ -180,6 +193,9 @@ The current approach has a fundamental limitation: all the error distributions a
   With enough ground-measured DBH + AGB pairs (typically 30–50+ trees), you could fit your own regional allometric
   equation, replacing Jucker and Chave entirely with coefficients calibrated to your forest type. This is the most rigorous
    option and would dramatically reduce model uncertainty for the specific species present.
+
+<br>
+<br>
 
 ## License
 
