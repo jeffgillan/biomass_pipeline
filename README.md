@@ -37,7 +37,7 @@ biomass_agb_mgha.tif + biomass_uncertainty_mgha.tif (COG)
 <br>
 <br>
 
-## Quick Start -- Local (Pathway 1)
+## Quick Start -- Native Installation (pathway 1)
 
 ```bash
 # Create conda environment
@@ -51,7 +51,7 @@ R -e "install.packages(c('itcSegment', 'BIOMASS', 'RCSF'), repos='https://cloud.
 Rscript R/run_pipeline.R
 ```
 
-## Quick Start -- Docker (Pathway 2)
+## Quick Start -- Docker (pathway 2)
 
 ```bash
 docker build -t biomass-pipeline .
