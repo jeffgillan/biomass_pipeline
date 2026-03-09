@@ -128,7 +128,12 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 | Allometric residual | + N(0, 0.40) on ln(DBH) scale | RSE = 0.40 |
 | Wood density | N(0.50, 0.08), floor 0.2 | species variation |
 
+
+### biomass_uncertainty_mgha.tif
 The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
+
+### biomass_uncertainty_CV.tif
+
 
 The Monte Carlo simulation is an estimate of model precision, how repeatable the measurement is. **It is not an estimate of accuracy, a comparison between the model and a known truth.**
 
