@@ -116,7 +116,9 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 <br>
 <br>
 
-## Model Precision
+## Model Uncertainty (i.e., Precision)
+
+The Monte Carlo simulation is an estimate of model precision, how repeatable the measurement is. **It is not an estimate of accuracy, a comparison between the model and a known truth.**
 
 **Jucker Monte Carlo (500 iterations):** We run 500 iterations of the AGB model equation for every tree, with slight variations for 5 variables. Propagates uncertainty in allometric coefficients, height measurement (1m RMSE), crown delineation (15% CV), allometric residual (RSE=0.40 on ln scale), and wood density (0.50 +/- 0.08 g/cm3) through Jucker 2017 + Chave 2014 equations. Per-tree outputs: mean, SD, 5th/95th percentiles, CV.
 
@@ -129,13 +131,21 @@ CD is crown diameter in meters. This is derived from your segmented crown polygo
 | Wood density | N(0.50, 0.08), floor 0.2 | species variation |
 
 
-### biomass_uncertainty_mgha.tif
+### biomass_uncertainty_mgha.tif (absolute uncertainty in Mg/Ha)
 The output of the Monte Carlo simulation is a single raster (biomass_uncertainty_mgha.tif) depicting 1 standard deviation of the simulated data within that pixel. The units are the same as the biomass raster, Megagrams per hectare. The true value falls within that range about 68% of the time — not a guaranteed bound. If you want to communicate a more conservative "envelope," you'd want to double it (±2 sigma ≈ 95% of the time). 
 
-### biomass_uncertainty_CV.tif
+In general, the uncertainty map shows that larger trees have larger absolute uncertainty. Small trees has smaller absolute uncertainty. 
 
+### biomass_uncertainty_CV.tif (relative uncertainty in %)
+This is the Coefficient of Variation (CV) — the ratio of standard deviation to mean, expressed as a percentage. CV is not bounded by 100%.
 
-The Monte Carlo simulation is an estimate of model precision, how repeatable the measurement is. **It is not an estimate of accuracy, a comparison between the model and a known truth.**
+A CV > 100% simply means the uncertainty (SD) is larger than the mean biomass in that pixel. This happens
+  in:
+
+  - Sparse pixels with 1–2 small trees: the individual tree uncertainties are large relative to the small
+  total biomass → very high CV
+  - Dense pixels with many large trees: uncertainties partially cancel out → lower CV (your 12% end)
+
 
                                                                                                                                                                 
 <br>
@@ -143,64 +153,18 @@ The Monte Carlo simulation is an estimate of model precision, how repeatable the
 
 ## Model Accuracy
 
-Assessing model accuracy requires comparing model outputs with ground metrics. We must have several validation plots where we have identified each individual tree location, it's height, crown diameter, dbh, and ultimately above ground biomass. 
+**Assessing model accuracy requires comparing model outputs with ground-truthed metrics**. We should have several validation field plots where we have identified each individual tree location, it's height, crown diameter, dbh, and ultimately above ground biomass. We compare the field validated measurements with the remote sensed metrics and develop statistics to describe accuracy including **Absolute Mean error, RMSE, Bland-Altman Limits of Agreement Plots.** 
 
 
 ## Fine-tuning the ABG model to fit Living Carbon Trees and Ecosystem
 
-The AGB model used in this demo is very general and global in nature. It is specific for conifer trees. 
+The AGB model used in this demo is very global in nature and specific for conifer trees. For real Living Carbon projects, we would need to find or develop allometric models that fit that tree/vegetation species found at the project locations.  
 
 <br>
 <br>
-<br>
-<br>
 
 
-The current approach has a fundamental limitation: all the error distributions are borrowed from literature (e.g., "ALS height RMSE is assumed to be 1.0m," "CD coefficient of variation assumed to be 15%"). They're plausible but not calibrated to your specific forest, sensor, or flight conditions. Ground data lets you replace assumptions with measurements.                                                                                           
-   
-  Here's a progression from simple to more rigorous:                                                                       
-                                                        
-  ---
-  Level 1: Validate the ALS height estimates
 
-  Compare LiDAR-derived tree heights (Z) to field-measured heights for the same trees. This gives you an empirical RMSE and
-   bias specific to your sensor and canopy conditions — replacing the assumed 1.0m SD in the MC loop with a real number. It
-   may also reveal systematic bias (LiDAR commonly underestimates height in dense canopies), which the current model
-  ignores entirely.
-
-  ---
-  Level 2: Validate crown diameter delineation
-
-  Measure crown diameters in the field (four cardinal directions, averaged) and compare to the LiDAR-derived values. This
-  replaces the assumed 15% CV with an actual CV, and may reveal that the error is not symmetric or lognormal as assumed.
-
-  ---
-  Level 3: Validate the allometric equations locally
-
-  The Jucker RSE of 0.40 is a global value fit across many forest types. For your New Mexico woodland (piñon-juniper /
-  ponderosa), the actual prediction error could be higher or lower. With field-measured DBH and AGB (destructive harvest or
-   species-specific allometrics from the literature), you can:
-  - Compute the actual residuals between predicted and measured AGB
-  - Fit a local RSE to replace the global one
-  - Check for systematic bias by tree size class (allometrics often perform worse at the extremes)
-
-  ---
-  Level 4: Empirical pixel-level validation
-
-  Establish field plots whose footprints align with your 10m raster pixels. Sum the measured biomass of all trees in each
-  plot and compare directly to the raster pixel value. This is the gold standard — it collapses all sources of error
-  (height, crown, allometric, segmentation) into a single observed prediction error at the output scale. You can then
-  report RMSE and bias at the map level, not just the tree level.
-
-  ---
-  Level 5: Fit a local allometric model (if sample size allows)
-
-  With enough ground-measured DBH + AGB pairs (typically 30–50+ trees), you could fit your own regional allometric
-  equation, replacing Jucker and Chave entirely with coefficients calibrated to your forest type. This is the most rigorous
-   option and would dramatically reduce model uncertainty for the specific species present.
-
-<br>
-<br>
 
 ## License
 
