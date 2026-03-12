@@ -7,6 +7,17 @@ cat("============================================================\n")
 cat("  ALS Biomass Pipeline\n")
 cat("============================================================\n\n")
 
+# --- Parse command-line arguments ---
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 1) {
+  stop("Usage: Rscript R/run_pipeline.R <path/to/input.laz>")
+}
+input_las_file <- args[1]
+if (!file.exists(input_las_file)) {
+  stop("Input file not found: ", input_las_file)
+}
+cat(sprintf("Input LiDAR file: %s\n\n", input_las_file))
+
 # Set PROJ_DATA if not already set (conda environments)
 if (Sys.getenv("PROJ_DATA") == "" && dir.exists("/opt/conda/share/proj")) {
   Sys.setenv(PROJ_DATA = "/opt/conda/share/proj")

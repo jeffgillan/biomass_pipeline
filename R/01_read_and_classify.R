@@ -9,7 +9,7 @@ library(sf)
 cat("=== Step 1: Read and Classify ===\n")
 
 # --- Paths ---
-input_laz  <- file.path("USGS_LPC_NM_SouthCentral_2018_D19_12RXV885860.laz")
+input_laz  <- input_las_file  # set by run_pipeline.R from CLI argument
 output_laz <- file.path("output", "intermediate", "las_classified.laz")
 
 if (!file.exists(input_laz)) stop("Input LAZ not found: ", input_laz)

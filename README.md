@@ -48,7 +48,7 @@ conda activate biomass_pipeline
 R -e "install.packages(c('itcSegment', 'BIOMASS', 'RCSF'), repos='https://cloud.r-project.org')"
 
 # Place .laz file in project root, then run
-Rscript R/run_pipeline.R
+Rscript R/run_pipeline.R </path/to/lidar.laz>
 ```
 
 ## Quick Start -- Docker (pathway 2)
